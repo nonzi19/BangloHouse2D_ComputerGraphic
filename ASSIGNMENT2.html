@@ -1,0 +1,1099 @@
+<head>
+    <script src="gl-matrix-min.js"></script>
+    <script>
+        function main() {
+            const canvas = document.querySelector("#glCanvas");
+            const gl = canvas.getContext("webgl");
+        
+            const vsSource = `
+                attribute vec4 aVertexPosition;
+                uniform mat4 uModelViewMatrix;
+                uniform mat4 uProjectionMatrix;
+                void main() {
+                    gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+                }
+            `;
+
+            const fsSource = `
+                void main() {
+                    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); 
+                }
+            `;
+
+            const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
+
+            const programInfo = {
+                program: shaderProgram,
+                attribLocations: {
+                vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
+                },
+                uniformLocations: {
+                projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
+                modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
+                },
+            };
+
+            positions = [
+            /* inner box    #1
+            -0.5, 0.5, // 0
+            0.5, 0.5, // 1
+            0.5, -0.5, // 2
+            -0.5, -0.5, // 3
+            
+            // outer box - offset start = 4
+            // top box  #2
+            -1, 1,
+            1, 1,
+            -1, 1.5,
+            1, 1.5,
+
+            // right box  #3
+            1, 1, 
+            1, -1,
+            1.5, 1,
+            1.5, -1,
+
+            //bottom box  #4
+            1, -1,
+            -1, -1,
+            1, -1.5,
+            -1, -1.5,
+
+            //left box  #5
+            -1, -1,
+            -1, 1,
+            -1.5, -1,
+            -1.5, 1,*/
+
+            //bigroof
+            -1.7,0.6, //1
+            0,2.2, //10 
+            -1.65,0.55, //2
+            0,2.1, //7
+
+            0,2.2, //10
+            0,2.1, //7
+            1.7,0.6, //9
+            1.65,0.55, //8
+
+            //smallroof
+            -0.65,1.49, //3
+            -0.59,1.55, //6
+            0.2,0.6, //4
+            0.25,0.65, //5
+
+            //housebodyoutline
+            -1.5,0.69,
+            -1.5,-1.1,
+            1.5,-1.1,
+            1.5,0.69,
+
+            //smallhousebodyoutline
+            -1.5,0.69,
+            -1.5,-1.1,
+            0.1,-1.1,
+            0.1,0.7,
+
+            //chimneys
+            0.7,1.55,
+            0.7,1.75,
+            1.0,1.75,
+            1.0,1.27,
+
+            //chimneyroof
+            0.65,1.75,
+            0.65,1.79,
+            1.05,1.79,
+            1.05,1.75,
+
+            //housebaseleft
+            -1.55,-1.1,
+            -1.5,-1.7,
+            0.12,-1.7,
+            0.15,-1.1,
+
+            //housebasemid
+            0.15,-1.1, //1
+            0.12,-1.7, //2
+            0.5,-1.7, //3
+            0.5,-1.61, //4
+            0.45,-1.61, //5
+            0.45,-1.57, //6
+            0.57,-1.57, //7
+            0.57,-1.48, //8
+            0.52,-1.48, //9
+            0.52,-1.44, //10
+            0.64,-1.44, //11
+            0.64,-1.35, //12
+            0.59,-1.35, //13
+            0.59,-1.31, //14
+            0.59,-1.1, //15
+
+            //housebaseright
+            1.23,-1.1, //1
+            1.23,-1.35, //toptile3
+            1.17,-1.35, //topstair4
+            1.17,-1.44, //topstair3
+            1.28,-1.44, //midtile4
+            1.28,-1.48, //midtile3
+            1.22,-1.48, //midstair4
+            1.22,-1.57, //midstair3
+            1.32,-1.57, //bottile4
+            1.32,-1.61, //bottile3
+            1.27,-1.61, //botstair4
+            1.27,-1.7, //botstair3
+            1.5,-1.7, //13
+            1.55,-1.1, //14
+
+            //stairsbottom
+            0.5,-1.61,
+            0.5,-1.7,
+            1.27,-1.7,
+            1.27,-1.61,
+
+            //stairsmid
+            0.57,-1.48,
+            0.57,-1.57,
+            1.22,-1.57,
+            1.22,-1.48,
+            
+            //stairstop
+            0.64,-1.35,
+            0.64,-1.44,
+            1.17,-1.44,
+            1.17,-1.35,
+
+            //stairstilebottom
+            0.45,-1.57,
+            0.45,-1.61,
+            1.32,-1.61,
+            1.32,-1.57,
+
+            //stairstilemid
+            0.52,-1.44,
+            0.52,-1.48,
+            1.28,-1.48,
+            1.28,-1.44,
+
+            //stairstiletop
+            0.59,-1.31,
+            0.59,-1.35,
+            1.23,-1.35,
+            1.23,-1.31,
+
+            //EZAM PART
+
+            //tingkap 1 I
+            -1.25,-0.4, //TOP LEFT
+            -1.25,-1,   //BOTTOM LEFT
+            -1.06,-1,   //BOTTOM RIGHT
+            -1.06,-0.4,  //TOP RIGHT
+
+            //tingkap 1 II
+            -1.04,-0.4,  //TOP LEFT
+            -1.04,-1,    //BOTTOM LEFT
+            -0.85,-1,     //BOTTOM RIGHT
+            -0.85,-0.4,    //TOP RIGHT
+
+            //TINGKAP 1 III BULAT
+            -1.06,-0.37,  //SENTEL
+            -1.25,-0.37,   //FIRST TITIK 1 KIRI
+            -1.23,-0.29,   //SECOND TITIK 2 KIRI
+            -1.15,-0.2,    //TRID TITIK 3 KIRI
+            -1.06, -0.15,   //TITIK AKHIR ATAS
+
+            //TINGKAP 1 IV BULAT
+            -1.04,-0.37,  //SENTEL
+            -0.85,-0.37,   //FIRST TITIK 1 KANAN
+            -0.87,-0.29,   //SECOND TITIK 2 KANAN
+            -0.95,-0.2,    //TRID TITIK 3 KANAN
+            -1.04, -0.15,   //TITIK AKHIR ATAS
+
+            //tingkap 2 I
+            -0.55,-0.4,   //TOP LEFT
+            -0.55,-1,     //BOTTOM LEFT
+            -0.36,-1,     //BOTTOM RIGHT
+            -0.36,-0.4,   //TOP RIGHT
+
+             //tingkap 2 II
+             -0.34,-0.4,  //TOP LEFT
+            -0.34,-1,    //BOTTOM LEFT
+            -0.15,-1,    //BOTTOM RIGHT
+            -0.15,-0.4,  //TOP RIGHT
+
+            //TINGKAP 2 III BULAT
+            -0.36,-0.37, //SENTEL
+            -0.55,-0.37,   //FIRST TITIK 1 KIRI
+            -0.53,-0.29,   //SECOND TITIK 2 KIRI
+            -0.45,-0.2,    //TRID TITIK 3 KIRI
+            -0.36, -0.15,   //TITIK AKHIR ATAS
+
+            //TINGKAP 2 IV BULAT
+            -0.34,-0.37, //SENTEL
+            -0.15,-0.37,   //FIRST TITIK 1 KIRI
+            -0.17,-0.29,   //SECOND TITIK 2 KIRI
+            -0.25,-0.2,    //TRID TITIK 3 KIRI
+            -0.34, -0.15,   //TITIK AKHIR ATAS
+
+            //EIDHAM SHAR PART
+
+            //door border line (outside)
+            0.59,-1.31,//buttom left
+            0.59,-0.20,//top left 
+            1.23,-0.20,//top right 
+            1.23,-1.31,//buttom right
+             
+            //door border line (inside)
+            0.63,-1.31,//buttom left
+            0.63,-0.24,//top left
+            1.19,-0.24,//top right
+            1.19,-1.31,//buttom right
+
+            //left top door window
+            0.895,-0.34,//top right
+            0.7,-0.34,//top left
+            0.895,-0.54,//buttom right
+            0.7,-0.54,//buttom left 
+            
+            //right top door window                    
+            0.915,-0.34,//top left
+            1.11,-0.34,//top right
+            0.915,-0.54,//buttom right
+            1.11,-0.54,//buttom left
+
+            //left mid door window 
+            0.895,-0.56,//top left
+            0.7,-0.56,//top right
+            0.895,-0.76,//buttom right
+            0.7,-0.76,//buttom left
+
+            //right mid door window
+            0.915,-0.56,//top left
+            1.11,-0.56,//top right
+            0.915,-0.76,//buttom right
+            1.11,-0.76,//buttom left
+
+            //left bottom door window
+            0.895,-0.78,//top left
+            0.7,-0.78,//top right
+            0.895,-0.98,//buttom right
+            0.7,-0.98,//buttom left
+
+            //right bottom door window
+            0.915,-0.78,//top left
+            1.11,-0.78,//top right
+            0.915,-0.98,//buttom right
+            1.11,-0.98,//buttom left
+
+            //tingkap 3 I
+            0.68,0.55,   //TOP LEFT
+            0.68,-0.1,     //BOTTOM LEFT  //
+            0.87,-0.1 ,     //BOTTOM RIGHT //
+            0.87,0.55,   //TOP RIGHT
+            
+
+            //tingkap 3 II
+            0.89,0.55,  //TOP LEFT
+            0.89,-0.1,    //BOTTOM LEFT
+            1.09,-0.1,    //BOTTOM RIGHT  
+            1.09,0.55,  //TOP RIGHT
+        
+
+           //TINGKAP 3 III BULAT
+            0.87,0.58, //SENTEL
+            0.68,0.58,   //FIRST TITIK 1 KIRI
+            0.7,0.66,   //SECOND TITIK 2 KIRI
+            0.78,0.75,   //TRID TITIK 3 KIRI
+            0.87,0.8,   //TITIK AKHIR ATAS
+
+
+            //TINGKAP 3 IV BULAT
+            0.89,0.58, //SENTEL
+            1.09,0.58,   //FIRST TITIK 1 KIRI
+            1.07,0.66,   //SECOND TITIK 2 KIRI
+            0.99,0.75,   //TRID TITIK 3 KIRI
+            0.89,0.8,   //TITIK AKHIR ATAS
+
+
+
+            //tingkap 4 I
+            -0.15,1.55,   //TOP LEFT
+            -0.15,1.3,     //BOTTOM LEFT  //
+            -0.065,1.3,     //BOTTOM RIGHT //
+            -0.065,1.55,   //TOP RIGHT
+            
+
+            
+            //tingkap 4 II
+            -0.06,1.55,  //TOP LEFT
+            -0.06,1.3,    //BOTTOM LEFT
+            0.025,1.3,    //BOTTOM RIGHT  
+            0.025,1.55,  //TOP RIGHT
+        
+          
+
+            //TINGKAP 4 III BULAT
+            -0.065,1.555,  //SENTEL
+            -0.15,1.555,
+            -0.135,1.60,
+            -0.11,1.635,
+            -0.065,1.66,
+
+
+
+            //TINGKAP 4 IV BULAT
+            -0.06,1.555, //SENTEL
+             0.025,1.555,   //FIRST TITIK 1 KIRI
+             0.01,1.60,   //SECOND TITIK 2 KIRI
+            -0.015,1.635,   //TRID TITIK 3 KIRI
+            -0.06,1.66,   //TITIK AKHIR ATAS
+			
+			//fakri
+		    //TINGKAP atas balkoni
+            -0.9,0.3, //SENTEL
+            -0.9,0.9,   //FIRST TITIK 1 KIRI
+			-0.85,0.95,
+			-0.75,0.99,
+            -0.7,1,   //SECOND TITIK 2 KIRI
+            -0.65,0.99,   //TRID TITIK 3 KIRI
+			-0.55,0.95,
+			-0.5,0.9,
+            -0.5,0.3,   //TITIK AKHIR ATAS
+			
+			//Tingkap balkoni bawah
+			-0.9,0.25,
+			-0.9,0,
+			-0.5,0,
+			-0.5,0.25,
+			
+			//bingkai tingkap balkoni
+            -0.93,-0.03, //SENTEL
+            -0.93,0.92,   //FIRST TITIK 1 KIRI
+			-0.85,0.98,
+			-0.75,1.02,
+            -0.7,1.03,   //SECOND TITIK 2 KIRI
+            -0.65,1.02,   //TRID TITIK 3 KIRI
+			-0.55,0.98,
+			-0.47,0.92,
+            -0.47,-0.03,   //TITIK AKHIR ATAS
+			
+			//balkoni lantai
+			-1.1,-0.03,
+			-1.1,-0.07,
+			-0.3,-0.07,
+			-0.3,-0.03,
+			
+			//pagar atas balkoni
+			-1.1,0.17,
+			-1.1,0.2,
+			-0.3,0.2,
+			-0.3,0.17,
+			
+			//tiang 1 balkoni
+			-1.05,0.17,
+			-1,-0.03,
+			-0.95,-0.03,
+			-1,0.17,
+			
+			//tiang 2 balkoni
+			-0.88,0.17,
+			-0.88,-0.03,
+			-0.83,-0.03,
+			-0.83,0.17,
+			
+			//tiang 3 balkoni
+			-0.72,0.17,
+			-0.72,-0.03,
+			-0.67,-0.03,
+			-0.67,0.17,
+
+			//tiang 4 balkoni
+			-0.55,0.17,
+			-0.55,-0.03,
+			-0.5,-0.03,
+			-0.5,0.17,
+			
+			//tiang 5 balkoni
+			-0.4,0.17,
+			-0.45,-0.03,
+			-0.4,-0.03,
+			-0.35,0.17,
+			
+			//hiasan belakang
+			-1,-0.03,
+			-1,0.92,
+			-1.05,0.92,
+			-1.05,1.03,
+			-1,1.03,
+			-1.03,1.05,
+			-1,1.1,
+			-0.9,1.17,
+			-0.7,1.2,
+			-0.5,1.17,
+			-0.37,1.07,
+			-0.4,1.05,
+			-0.4,1.03,
+			-0.35,1.03,
+			-0.35,0.92,
+			-0.4,0.92,
+			-0.4,-0.03,
+
+               
+
+
+
+            //tingkap 1 bikai
+            -1.25,-0.4, //TOP LEFT
+            -1.25,-1,   //BOTTOM LEFT
+            -0.85,-1,     //BOTTOM RIGHT
+            -0.85,-0.4,    //TOP RIGHT
+
+            -0.85,-0.37,   //FIRST TITIK 1 KANAN
+            -0.87,-0.29,   //SECOND TITIK 2 KANAN
+            -0.95,-0.2,    //TRID TITIK 3 KANAN
+            -1.04, -0.15,   //TITIK AKHIR ATAS
+
+            -1.06, -0.15,   //TITIK AKHIR ATAS
+            -1.15,-0.2,    //TRID TITIK 3 KIRI
+            -1.23,-0.29,   //SECOND TITIK 2 KIRI
+            -1.25,-0.37,   //FIRST TITIK 1 KIRI
+
+
+             //tingkap 1 bikai 2 
+             -1.27,-0.4, //TOP LEFT
+            -1.27,-1.02,   //BOTTOM LEFT
+            -0.83,-1.02,     //BOTTOM RIGHT
+            -0.83,-0.4,    //TOP RIGHT
+
+            -0.83,-0.37,   //FIRST TITIK 1 KANAN
+            -0.85,-0.29,   //SECOND TITIK 2 KANAN
+            -0.93,-0.19,    //TRID TITIK 3 KANAN
+            -1.05, -0.13,   //TITIK AKHIR ATAS
+
+            -1.05, -0.13,   //TITIK AKHIR ATAS
+            -1.17,-0.19,    //TRID TITIK 3 KIRI
+            -1.25,-0.29,   //SECOND TITIK 2 KIRI
+            -1.27,-0.37,   //FIRST TITIK 1 KIRI
+
+          
+             
+            //tingkap 2  bikai
+            -0.55,-0.4,   //TOP LEFT
+            -0.55,-1,     //BOTTOM LEFT   
+            -0.15,-1,    //BOTTOM RIGHT
+            -0.15,-0.4,  //TOP RIGHT
+       
+            -0.15,-0.37,   //FIRST TITIK 1 KIRI
+            -0.17,-0.29,   //SECOND TITIK 2 KIRI
+            -0.25,-0.2,    //TRID TITIK 3 KIRI
+            -0.34, -0.15,   //TITIK AKHIR ATAS
+
+            -0.36, -0.15,   //TITIK AKHIR ATAS
+            -0.45,-0.2,    //TRID TITIK 3 KIRI
+            -0.53,-0.29,   //SECOND TITIK 2 KIRI
+            -0.55,-0.37,   //FIRST TITIK 1 KIRI
+
+
+            //tingkap 2  bikai 2
+            -0.57,-0.4,   //TOP LEFT
+            -0.57,-1.02,     //BOTTOM LEFT   
+            -0.13,-1.02,    //BOTTOM RIGHT
+            -0.13,-0.4,  //TOP RIGHT
+       
+            -0.13,-0.37,   //FIRST TITIK 1 KIRI
+            -0.15,-0.29,   //SECOND TITIK 2 KIRI
+            -0.23,-0.19,    //TRID TITIK 3 KIRI
+            -0.34, -0.135,   //TITIK AKHIR ATAS
+
+            -0.36, -0.135,   //TITIK AKHIR ATAS
+            -0.47,-0.19,    //TRID TITIK 3 KIRI
+            -0.55,-0.29,   //SECOND TITIK 2 KIRI
+            -0.57,-0.37,   //FIRST TITIK 1 KIRI
+
+
+
+
+             //tingkap 3  bikai
+               0.68,0.55,   //TOP LEFT
+            0.68,-0.1,     //BOTTOM LEFT       
+            1.09,-0.1,    //BOTTOM RIGHT  
+            1.09,0.55,  //TOP RIGHT
+         
+            1.09,0.58,   //FIRST TITIK 1 KANAN
+            1.07,0.66,   //SECOND TITIK 2 KANAN
+            0.99,0.75,   //TRID TITIK 3 KANAN
+            0.89,0.8,   //TITIK AKHIR ATAS
+
+            0.87,0.8,   //TITIK AKHIR ATAS
+            0.78,0.75,   //TRID TITIK 3 KIRI
+            0.7,0.66,   //SECOND TITIK 2 KIRI
+            0.68,0.58,   //FIRST TITIK 1 KIRI
+
+
+            
+            
+            
+           //tingkap 3  bikai 2
+            0.65,0.55,   //TOP LEFT
+            0.65,-0.13,     //BOTTOM LEFT       
+            1.12,-0.13,    //BOTTOM RIGHT  
+            1.12,0.55,  //TOP RIGHT
+         
+            1.12,0.58,   //FIRST TITIK 1 kanan
+            1.08,0.69,   //SECOND TITIK 2 kanan
+            0.98,0.78,   //TRID TITIK 3 kanan
+            0.88,0.83,   //TITIK AKHIR ATAS
+
+            0.88,0.83,   //TITIK AKHIR ATAS
+            0.78,0.78,   //TRID TITIK 3 KIRI
+            0.69,0.69,   //SECOND TITIK 2 KIRI
+            0.65,0.58,   //FIRST TITIK 1 KIRI
+            
+
+
+
+
+
+
+          //TINGKAP 4 BIKAI LUAR 
+          -0.15,1.55,  //TOP LEFT
+           -0.15,1.3,    //BOTTOM LEFT 
+            0.025,1.3,    //BOTTOM RIGHT
+            0.025,1.55,  //TOP RIGHT 
+            
+            0.025,1.555,   //FIRST TITIK 1 
+            0.01,1.60,   //SECOND TITIK 2 
+            -0.015,1.635,   //TRID TITIK 3 
+            -0.06,1.66,   //TITIK AKHIR ATAS
+
+            -0.065,1.66,
+            -0.11,1.635,
+            -0.135,1.60,
+            -0.15,1.555,
+
+          
+            //TINGKAP 4 BIKAI LUAR 
+            -0.18,1.55,  //TOP LEFT
+            -0.18,1.26,    //BOTTOM LEFT 
+            0.05,1.26,    //BOTTOM RIGHT
+            0.05,1.55,  //TOP RIGHT 
+            
+             0.05,1.555,   //FIRST TITIK 1 
+             0.01,1.65,   //SECOND TITIK 2 
+            -0.015,1.665,   //TRID TITIK 3 
+            -0.0625,1.7,   //TITIK AKHIR ATAS
+
+            -0.0625,1.7,
+            -0.11,1.665,
+            -0.135,1.65,
+            -0.18,1.555,
+
+          
+         
+           
+
+           
+           
+            
+           
+          
+			
+
+
+            ];
+
+            const buffers = initBuffers(gl);
+            drawScene(gl, programInfo, buffers);
+
+            // Draw the scene
+            /*primitive = gl.LINE_LOOP;
+            offset = 0;
+            vertexCount = 4; 
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            primitive = gl.TRIANGLE_STRIP;
+            offset = 4;
+            vertexCount = 16; 
+            gl.drawArrays(primitive, offset, vertexCount);*/
+            
+            //bigroof
+            primitive = gl.TRIANGLE_STRIP;
+            offset = 0
+            vertexCount = 8;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            //smallroof
+            primitive = gl.TRIANGLE_STRIP;
+            offset = 8
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            //housebodyoutline
+            primitive = gl.LINES;
+            offset = 12
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            //smallhousebodyoutline
+            primitive = gl.LINE_STRIP;
+            offset = 16
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            //chimneys
+            primitive = gl.LINE_STRIP;
+            offset = 20
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            //chimneysroof
+            primitive = gl.TRIANGLE_FAN;
+            offset = 24
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            //housebaseleft
+            primitive = gl.LINE_LOOP;
+            offset = 28
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            //housebasemid
+            primitive = gl.LINE_LOOP;
+            offset = 32
+            vertexCount = 15;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            //housebaseright
+            primitive = gl.LINE_LOOP;
+            offset = 47
+            vertexCount = 14;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            //stairsbottom
+            primitive = gl.LINE_LOOP;
+            offset = 61
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            //stairsmid
+            primitive = gl.LINE_LOOP;
+            offset = 65
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            //stairsTop
+            primitive = gl.LINE_LOOP;
+            offset = 69
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            //stairstilebottom
+            primitive = gl.TRIANGLE_FAN;
+            offset = 73
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            //stairstilemid
+            primitive = gl.TRIANGLE_FAN;
+            offset = 77
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            //stairstiletop
+            primitive = gl.TRIANGLE_FAN;
+            offset = 81
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+
+            //EZAM PART
+
+            //tingkap 1 I
+            primitive = gl.TRIANGLE_FAN;
+            offset = 85
+            vertexCount = 4; 
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            //tingkap 1 II
+            primitive = gl.TRIANGLE_FAN;
+            offset = 89
+            vertexCount = 4; 
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            ///tingkap 1 III BULAT
+            primitive = gl.TRIANGLE_FAN;
+            offset = 93
+            vertexCount = 5;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            ///tingkap 1 IV BULAT
+            primitive = gl.TRIANGLE_FAN;
+            offset = 98
+            vertexCount = 5;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            //tingkap 2 I
+            primitive = gl.TRIANGLE_FAN;
+            offset =  103
+            vertexCount = 4; 
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            //tingkap 2 II
+            primitive = gl.TRIANGLE_FAN;
+            offset =  107
+            vertexCount = 4; 
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            ///tingkap 2 III BULAT
+            primitive = gl.TRIANGLE_FAN;
+            offset = 111
+            vertexCount = 5;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            //tingkap 2 IV BULAT
+            primitive = gl.TRIANGLE_FAN;
+            offset = 116
+            vertexCount = 5;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+
+            //EIDHAM PART
+
+            //door border line (outside)
+            primitive = gl.LINE_LOOP;
+            offset = 121
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            //door border line (inside)
+            primitive = gl.LINE_LOOP;
+            offset = 125
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+
+            primitive = gl.TRIANGLE_STRIP;
+            offset = 129
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset,vertexCount);
+
+            primitive = gl.TRIANGLE_STRIP;
+            offset = 133
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset,vertexCount);
+
+            primitive = gl.TRIANGLE_STRIP;
+            offset = 137
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset,vertexCount);
+
+            primitive = gl.TRIANGLE_STRIP;
+            offset = 141
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset,vertexCount);
+
+            primitive = gl.TRIANGLE_STRIP;
+            offset = 145
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset,vertexCount);
+
+            primitive = gl.TRIANGLE_STRIP;
+            offset = 149
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset,vertexCount);
+
+            ///tingkap 3 I 
+            primitive = gl.TRIANGLE_FAN;
+            offset = 153
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            ///tingkap 3 II 
+            primitive = gl.TRIANGLE_FAN;
+            offset = 157
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            
+            ///tingkap 3 III BULAT
+            primitive = gl.TRIANGLE_FAN;
+            offset = 161
+            vertexCount = 5;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            ///tingkap 3 IV BULAT
+            primitive = gl.TRIANGLE_FAN;
+            offset = 166
+            vertexCount = 5;
+            gl.drawArrays(primitive, offset, vertexCount);
+           
+
+            
+            ///tingkap 4 I 
+            primitive = gl.TRIANGLE_FAN;
+            offset = 171
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            ///tingkap 4 II 
+            primitive = gl.TRIANGLE_FAN;
+            offset = 175
+            vertexCount = 4;
+            gl.drawArrays(primitive, offset, vertexCount);
+            
+            ///tingkap 4 III BULAT
+            primitive = gl.TRIANGLE_FAN;
+            offset = 179
+            vertexCount = 5;
+            gl.drawArrays(primitive, offset, vertexCount);
+
+            ///tingkap 4 IV BULAT
+            primitive = gl.TRIANGLE_FAN;
+            offset = 184
+            vertexCount = 5;
+            gl.drawArrays(primitive, offset, vertexCount);
+			
+			//fakri
+			//tingkap atas balkoni
+			primitive = gl.LINE_LOOP;
+            offset = 189
+            vertexCount = 9;
+            gl.drawArrays(primitive, offset, vertexCount);
+			
+			//tingkap balkoni bawah
+			primitive = gl.LINE_LOOP;
+			offset = 198
+			vertexCount = 4;
+			gl.drawArrays(primitive, offset, vertexCount);
+			
+			//bingkai
+			primitive = gl.LINE_LOOP;
+			offset = 202
+			vertexCount = 9;
+			gl.drawArrays(primitive, offset, vertexCount);
+			
+			//lantai balkoni
+			primitive = gl.TRIANGLE_FAN;
+			offset = 211
+			vertexCount = 4;
+			gl.drawArrays(primitive, offset, vertexCount);
+			
+			//pagar atas balkoni
+			primitive = gl.TRIANGLE_FAN;
+			offset = 215
+			vertexCount = 4;
+			gl.drawArrays(primitive, offset, vertexCount);
+			
+			//tiang 1 balkoni
+			primitive = gl.TRIANGLE_FAN;
+			offset = 219
+			vertexCount = 4;
+			gl.drawArrays(primitive, offset, vertexCount);
+			
+			//tiang 2 balkoni
+			primitive = gl.TRIANGLE_FAN;
+			offset = 223
+			vertexCount = 4;
+			gl.drawArrays(primitive, offset, vertexCount);
+			
+			//tiang 3 balkoni
+			primitive = gl.TRIANGLE_FAN;
+			offset = 227
+			vertexCount = 4;
+			gl.drawArrays(primitive, offset, vertexCount);
+			
+			//tiang 4 balkoni
+			primitive = gl.TRIANGLE_FAN;
+			offset = 231
+			vertexCount = 4;
+			gl.drawArrays(primitive, offset, vertexCount);
+			
+			//tiang 5 balkoni
+			primitive = gl.TRIANGLE_FAN;
+			offset = 235
+			vertexCount = 4;
+			gl.drawArrays(primitive, offset, vertexCount);
+			
+			//hiasan belakang
+			primitive = gl.LINE_LOOP;
+			offset = 239
+			vertexCount =  17;
+			gl.drawArrays(primitive, offset, vertexCount);
+
+            //tingkap 1 bikai  luar
+			primitive = gl.LINE_LOOP;
+			offset = 256
+			vertexCount =  12;
+			gl.drawArrays(primitive, offset, vertexCount);
+
+            
+
+
+            //tingkap 1 bikai  luar 2
+			primitive = gl.LINE_LOOP;
+			offset = 268
+			vertexCount =  12;
+			gl.drawArrays(primitive, offset, vertexCount);
+
+           //tingkap 2 bikai  luar
+			primitive = gl.LINE_LOOP;
+			offset = 280
+			vertexCount =  12;
+			gl.drawArrays(primitive, offset, vertexCount);
+
+            //tingkap 2 bikai  luar  2
+			primitive = gl.LINE_LOOP;
+			offset = 292
+			vertexCount =  12;
+			gl.drawArrays(primitive, offset, vertexCount);
+
+            //tingkap 3 bikai  luar  
+			primitive = gl.LINE_LOOP;
+			offset = 304
+			vertexCount =  12;
+			gl.drawArrays(primitive, offset, vertexCount);
+
+            //tingkap 3 bikai  luar  2
+			primitive = gl.LINE_LOOP;
+			offset = 316
+			vertexCount =  12;
+			gl.drawArrays(primitive, offset, vertexCount);
+
+            //tingkap 4 bikai  luar  
+			primitive = gl.LINE_LOOP;
+			offset = 328
+			vertexCount =  12;
+			gl.drawArrays(primitive, offset, vertexCount);
+
+            //tingkap 4 bikai  luar  2
+			primitive = gl.LINE_LOOP;
+			offset = 340
+			vertexCount =  12;
+			gl.drawArrays(primitive, offset, vertexCount);
+
+
+
+
+
+           
+
+    
+        }
+        
+        var positions, offset, vertexCount, primitive;
+        window.onload = main;
+
+        function initBuffers(gl) 
+        {
+            const positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER,
+                        new Float32Array(positions),
+                        gl.STATIC_DRAW);
+
+            return {
+                position: positionBuffer,
+            };
+        }
+
+
+        function drawScene(gl, programInfo, buffers) 
+        {
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);  
+            gl.clearDepth(1.0);                 
+            gl.enable(gl.DEPTH_TEST);           
+            gl.depthFunc(gl.LEQUAL);            
+
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+            const fieldOfView = 45 * Math.PI / 180;   
+            const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+            const zNear = 0.1;
+            const zFar = 100.0;
+            const projectionMatrix = mat4.create();
+
+            mat4.perspective(projectionMatrix,
+                            fieldOfView,
+                            aspect,
+                            zNear,
+                            zFar);
+
+            const modelViewMatrix = mat4.create();
+
+            mat4.translate(modelViewMatrix,     
+                            modelViewMatrix,     
+                            [0.0, 0.0, -6.0]);  
+            {
+                const numComponents = 2;
+                const type = gl.FLOAT;
+                const normalize = false;
+                const stride = 0;
+                const offset = 0;
+                gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+                gl.vertexAttribPointer(
+                    programInfo.attribLocations.vertexPosition,
+                    numComponents,
+                    type,
+                    normalize,
+                    stride,
+                    offset);
+                gl.enableVertexAttribArray(
+                    programInfo.attribLocations.vertexPosition);
+            }
+
+            gl.useProgram(programInfo.program);
+
+            gl.uniformMatrix4fv(
+                programInfo.uniformLocations.projectionMatrix,
+                false,
+                projectionMatrix);
+            gl.uniformMatrix4fv(
+                programInfo.uniformLocations.modelViewMatrix,
+                false,
+                modelViewMatrix);
+
+        }
+
+
+        function initShaderProgram(gl, vsSource, fsSource) 
+        {
+            const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
+            const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+
+            const shaderProgram = gl.createProgram();
+            gl.attachShader(shaderProgram, vertexShader);
+            gl.attachShader(shaderProgram, fragmentShader);
+            gl.linkProgram(shaderProgram);
+
+            if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+                alert('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
+                return null;
+            }
+
+            return shaderProgram;
+        }
+
+
+        function loadShader(gl, type, source) 
+        {
+            const shader = gl.createShader(type);
+
+            gl.shaderSource(shader, source);
+
+            gl.compileShader(shader);
+
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                alert('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+
+            return shader;
+        }
+    </script>
+</head>
+
+<body>
+  <canvas id="glCanvas" width="900" height="720"></canvas>
+</body>
